@@ -6,7 +6,7 @@ using namespace quad_encoder;
 
 // CONSTRUCTORS
 driver::driver(uint32_t cpr)
-    : m_transition_matrix({{0, 1, -1, 2}, {1, 0, 2, -1}, {-1, 2, 0, 1}, {2, 1, -1, 0}}),
+    : m_transition_matrix{{0, 1, -1, 2}, {1, 0, 2, -1}, {-1, 2, 0, 1}, {2, 1, -1, 0}},
       m_cpr(cpr),
       m_prior_state(0),
       m_current_position(0),
