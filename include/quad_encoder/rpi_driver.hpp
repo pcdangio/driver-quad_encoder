@@ -19,7 +19,6 @@ public:
     /// \param pin_a The Broadcom / BCM GPIO pin number attached to signal A of the quad encoder.
     /// \param pin_b The Broadcom / BCM GPIO pin number attached to signal B of the quad encoder.
     rpi_driver(uint32_t cpr, uint8_t pin_a, uint8_t pin_b);
-    ~rpi_driver();
 
     // CONTROL
     /// \brief Starts the rpi_driver's monitoring of the quad encoder.

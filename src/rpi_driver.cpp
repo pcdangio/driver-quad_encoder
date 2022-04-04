@@ -14,11 +14,6 @@ rpi_driver::rpi_driver(uint32_t cpr, uint8_t pin_a, uint8_t pin_b)
       m_pin_a(pin_a),
       m_pin_b(pin_b)
 {}
-rpi_driver::~rpi_driver()
-{
-    // Stop the driver if it's running.
-    rpi_driver::stop();
-}
 
 // CONTROL
 void rpi_driver::start()
