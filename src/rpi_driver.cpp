@@ -24,143 +24,109 @@ rpi_driver::~rpi_driver()
 void rpi_driver::start()
 {
     // Initialize GPIO pins and attach interrupts.
-    // NOTE: this method will internally set the mode for the pin.
-    int32_t result = gpioSetISRFuncEx(rpi_driver::m_pin_a, EITHER_EDGE, std::numeric_limits<int32_t>::max(), &rpi_driver::interrupt_a, this);
-    if(result == 0)
-    {
-        result = gpioSetISRFuncEx(rpi_driver::m_pin_b, EITHER_EDGE, std::numeric_limits<int32_t>::max(), &rpi_driver::interrupt_b, this);
-    }
-    else if(result == PI_BAD_GPIO)
-    {
-        throw std::runtime_error("invalid gpio pin: " + std::to_string(rpi_driver::m_pin_a));
-    }
-    if(result == PI_BAD_GPIO)
-    {
-        throw std::runtime_error("invalid gpio pin: " + std::to_string(rpi_driver::m_pin_b));
-    }
 
-    // Initialize the state of the encoder with the current pin values.
-    // NOTE: If this point reached, GPIO are already verified as good.
-    if(result == 0)
+    // Set up pin A and handle it's result.
+    // NOTE: this method will internally set the mode for the pin.
+    switch(gpioSetISRFuncEx(rpi_driver::m_pin_a, EITHER_EDGE, std::numeric_limits<int32_t>::max(), &rpi_driver::interrupt_a, this))
     {
-        rpi_driver::initialize_state(static_cast<bool>(gpioRead(rpi_driver::m_pin_a)), static_cast<bool>(gpioRead(rpi_driver::m_pin_b)));
-    }
-    else
-    {
-        switch(result)
+        case 0:
         {
-            case 0:
-            {
-                // Do nothing, initialization succeeded.
-                return;
-            }
-            case PI_BAD_ISR_INIT:
-            {
-                throw std::runtime_error("initialize interrupt failed");
-            }
-            default:
-            {
-                throw std::runtime_error("unknown error");
-            }
+            // Do nothing, succeeded.
+            break;
+        }
+        case PI_BAD_GPIO:
+        {
+            throw std::runtime_error("invalid gpio pin: " + std::to_string(rpi_driver::m_pin_a));
+        }
+        case PI_BAD_ISR_INIT:
+        {
+            throw std::runtime_error("initialize interrupt failed for pin: " + std::to_string(rpi_driver::m_pin_a));
+        }
+        default:
+        {
+            throw std::runtime_error("unknown error");
         }
     }
+
+    // Set up pin B and handle it's result code.
+    switch(gpioSetISRFuncEx(rpi_driver::m_pin_b, EITHER_EDGE, std::numeric_limits<int32_t>::max(), &rpi_driver::interrupt_b, this))
+    {
+        case 0:
+        {
+            // Do nothing, succeeded.
+            break;
+        }
+        case PI_BAD_GPIO:
+        {
+            throw std::runtime_error("invalid gpio pin: " + std::to_string(rpi_driver::m_pin_b));
+        }
+        case PI_BAD_ISR_INIT:
+        {
+            throw std::runtime_error("initialize interrupt failed for pin: " + std::to_string(rpi_driver::m_pin_b));
+        }
+        default:
+        {
+            throw std::runtime_error("unknown error");
+        }
+    }
+
+    // Initialize quad encoder state.
+    // NOTE: GPIO has already been verified by this point.
+    rpi_driver::initialize_state(static_cast<bool>(gpioRead(rpi_driver::m_pin_a)), static_cast<bool>(gpioRead(rpi_driver::m_pin_b)));
 }
 void rpi_driver::stop()
 {
-
-}
-void rpi_driver::start_pin(uint8_t pin)
-{
-    // Set up edge-detection interrupt for the pin.
-    // NOTE: this method will internally set the mode for the pin.
-    switch(gpioSetISRFuncEx(pin, EITHER_EDGE, std::numeric_limits<int32_t>::max(), &rpi_driver::interrupt_callback, this))
-    {
-        case 0:
-        {
-            // Do nothing, initialization succeeded.
-            return;
-        }
-        case PI_BAD_GPIO:
-        {
-            throw std::runtime_error("invalid gpio pin: " + std::to_string(pin));
-        }
-        case PI_BAD_ISR_INIT:
-        {
-            throw std::runtime_error("initialize interrupt failed");
-        }
-        default:
-        {
-            throw std::runtime_error("unknown error");
-        }
-    }
-}
-bool rpi_driver::read_pin(uint8_t pin)
-{
-    switch(gpioRead(pin))
-    {
-        case 0:
-        {
-            return false;
-        }
-        case 1:
-        {
-            return true;
-        }
-        case PI_BAD_GPIO:
-        {
-            throw std::runtime_error("invalid gpio pin: " + std::to_string(pin));
-        }
-        default:
-        {
-            throw std::runtime_error("unknown error");
-        }
-    }
-}
-void rpi_driver::stop_pin(uint8_t pin)
-{
-    // Disable edge-detection interrupt for the pin.
-    switch(gpioSetISRFuncEx(pin, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, nullptr))
-    {
-        case 0:
-        {
-            // Do nothing, disable succeeded.
-            return;
-        }
-        case PI_BAD_GPIO:
-        {
-            throw std::runtime_error("invalid gpio pin: " + std::to_string(pin));
-        }
-        case PI_BAD_ISR_INIT:
-        {
-            throw std::runtime_error("disable interrupt failed");
-        }
-        default:
-        {
-            throw std::runtime_error("unknown error");
-        }
-    }
+    // Disable pin interrupts.
+    gpioSetISRFuncEx(rpi_driver::m_pin_a, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, nullptr);
+    gpioSetISRFuncEx(rpi_driver::m_pin_b, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, nullptr);
 }
 
 // CALLBACKS
 void rpi_driver::interrupt_a(int32_t pin, int32_t level, uint32_t timestamp, void* data)
 {
-    // Get pointer to the rpi_driver instance.
-    quad_encoder::rpi_driver* driver = reinterpret_cast<quad_encoder::rpi_driver*>(data);
+    // Cast rpi_driver pointer to the base driver pointer.
+    quad_encoder::driver* driver = reinterpret_cast<quad_encoder::driver*>(data);
 
-    // Validate level.
-    if(level == 0 || level == 1)
+    // Handle level.
+    switch(level)
     {
-        driver->tick_a(static_cast<bool>(level));
+        case 0:
+        {
+            driver->tick_a(false);
+            break;
+        }
+        case 1:
+        {
+            driver->tick_a(true);
+            break;
+        }
+        default:
+        {
+            // Do nothing.
+        }
     }
 }
 void rpi_driver::interrupt_b(int32_t pin, int32_t level, uint32_t timestamp, void* data)
 {
-    // Get pointer to the rpi_driver instance.
-    quad_encoder::rpi_driver* driver = reinterpret_cast<quad_encoder::rpi_driver*>(data);
+    // Cast rpi_driver pointer to the base driver pointer.
+    quad_encoder::driver* driver = reinterpret_cast<quad_encoder::driver*>(data);
 
-    // Validate level.
-    if(level == 0 || level == 1)
+    // Handle level.
+    switch(level)
     {
-        driver->tick_b(static_cast<bool>(level));
+        case 0:
+        {
+            driver->tick_b(false);
+            break;
+        }
+        case 1:
+        {
+            driver->tick_b(true);
+            break;
+        }
+        default:
+        {
+            // Do nothing.
+        }
     }
 }
