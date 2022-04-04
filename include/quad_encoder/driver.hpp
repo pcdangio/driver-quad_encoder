@@ -8,7 +8,7 @@
 /// \brief Contains all code related to the quadrature encoder driver.
 namespace quad_encoder {
 
-/// \brief A base driver for a quadrature encoder sensor.
+/// \brief A driver for a quadrature encoder sensor.
 class driver
 {
 public:
@@ -16,20 +16,7 @@ public:
     /// \brief Creates a new driver instance.
     /// \param cpr The counts per revolution of the encoder.
     driver(uint32_t cpr);
-    virtual ~driver();
 
-    // ACCESS
-    /// \brief Sets the home position of the axis to the current position.
-    void set_home();
-    /// \brief Gets the relative position of the axis to the home position in radians.
-    /// \param reset Resets the position to zero after reading it. DEFAULT = FALSE
-    /// \returns The current position in radians.
-    double get_position(bool reset = false);
-    /// \brief Gets the amount of pulses missed by the encoder.
-    /// \returns The number of pulses missed.
-    uint64_t pulses_missed();
-
-protected:
     // STATE UPDATE
     /// \brief Initializes the encoder's state.
     /// \param level_a The state of signal A.
@@ -41,6 +28,17 @@ protected:
     /// \brief Increments the encoder's state with an B signal pulse.
     /// \param level The new logic level of the B signal.
     void tick_b(bool level);
+
+    // ACCESS
+    /// \brief Sets the home position of the axis to the current position.
+    void set_home();
+    /// \brief Gets the relative position of the axis to the home position in radians.
+    /// \param reset Resets the position to zero after reading it. DEFAULT = FALSE
+    /// \returns The current position in radians.
+    double get_position(bool reset = false);
+    /// \brief Gets the amount of pulses missed by the encoder.
+    /// \returns The number of pulses missed.
+    uint64_t pulses_missed();
 
 private:
     // PARAMETERS

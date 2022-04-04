@@ -12,37 +12,6 @@ driver::driver(uint32_t cpr)
       m_current_position(0),
       m_pulses_missed(0)
 {}
-driver::~driver()
-{
-
-}
-
-// ACCESS
-void driver::set_home()
-{
-    // Set current position to zero.
-    driver::m_current_position = 0;
-    
-    // Reset the missed pulses flag.
-    driver::m_pulses_missed = 0;
-}
-double driver::get_position(bool reset)
-{
-    // Get current position in CPR.
-    double position = static_cast<double>(driver::m_current_position);
-    if(reset)
-    {
-        driver::m_current_position = 0;
-        driver::m_pulses_missed = 0;
-    }
-
-    // Return position in radians.
-    return position / static_cast<double>(driver::m_cpr) * 2.0 * M_PIf64;
-}
-uint64_t driver::pulses_missed()
-{
-    return driver::m_pulses_missed;
-}
 
 // STATE UPDATE
 void driver::initialize_state(bool level_a, bool level_b)
@@ -84,4 +53,31 @@ void driver::update_state(int8_t new_state)
 
     // Update the prior state.
     driver::m_prior_state = new_state;
+}
+
+// ACCESS
+void driver::set_home()
+{
+    // Set current position to zero.
+    driver::m_current_position = 0;
+    
+    // Reset the missed pulses flag.
+    driver::m_pulses_missed = 0;
+}
+double driver::get_position(bool reset)
+{
+    // Get current position in CPR.
+    double position = static_cast<double>(driver::m_current_position);
+    if(reset)
+    {
+        driver::m_current_position = 0;
+        driver::m_pulses_missed = 0;
+    }
+
+    // Return position in radians.
+    return position / static_cast<double>(driver::m_cpr) * 2.0 * M_PIf64;
+}
+uint64_t driver::pulses_missed()
+{
+    return driver::m_pulses_missed;
 }
