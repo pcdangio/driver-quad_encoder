@@ -72,8 +72,8 @@ void rpi_driver::start()
 void rpi_driver::stop()
 {
     // Disable pin interrupts.
-    gpioSetISRFuncEx(rpi_driver::m_pin_a, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, nullptr);
-    gpioSetISRFuncEx(rpi_driver::m_pin_b, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, nullptr);
+    gpioSetISRFuncEx(rpi_driver::m_pin_a, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, this);
+    gpioSetISRFuncEx(rpi_driver::m_pin_b, EITHER_EDGE, std::numeric_limits<int32_t>::max(), nullptr, this);
 }
 
 // CALLBACKS
