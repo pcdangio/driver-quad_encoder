@@ -4,6 +4,7 @@
 #define QUAD_ENCODER___DRIVER_H
 
 #include <stdint.h>
+#include <mutex>
 
 /// \brief Contains all code related to the quadrature encoder driver.
 namespace quad_encoder {
@@ -57,6 +58,8 @@ private:
     /// \brief Updates the encoder with a new state.
     /// \param new_state The new state to update with.
     void update_state(int8_t new_state);
+    /// \brief Provides thread protection for state-related variables.
+    std::mutex m_mutex_state;
 };
 
 }
