@@ -6,7 +6,9 @@ project(quad_encoder
         DESCRIPTION "A library for reading quadrature encoder sensors.")
 
 # Create library.
-add_library(quad_encoder_driver STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/driver.cpp)
+add_library(quad_encoder STATIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/driver.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/rpi_driver.cpp)
 
 # Set include directories for internal/external use.
-target_include_directories(quad_encoder_driver PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(quad_encoder PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
